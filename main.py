@@ -37,9 +37,16 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
 )
 
+
+if uploaded_files:
+    file_names = [f.name for f in uploaded_files]
+    selected_file = st.selectbox("Select a file:", file_names, key="file_selector")
+    
 if uploaded_files:
     files_to_process = []
     current_uploaded_file_names = {f.name for f in uploaded_files}
+    to_append = list(current_uploaded_file_names)
+    file_names.append(to_append)
     
     for uploaded_file in uploaded_files:
         
