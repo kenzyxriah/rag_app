@@ -7,6 +7,21 @@ from traceback import print_exc
 from groq import AsyncGroq
 from datetime import datetime
 
+import logging
+import warnings
+
+# Ignore all warnings for the rest of the process
+warnings.filterwarnings("ignore")
+
+logging.basicConfig(
+    level=logging.INFO,              
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# 2. Get a logger instance (you can name it or use the root logger)
+logger = logging.getLogger(__name__)
+
 
 GROQ_API_KEY =st.secrets["general"]["GROQ_API_KEY"]
 groq_client = AsyncGroq(api_key= GROQ_API_KEY)
@@ -18,50 +33,14 @@ GOOGLE_API_KEY = st.secrets["general"]["GOOGLE_API_KEY"]
 
 gemini_client = genai.Client(api_key= GOOGLE_API_KEY)
 
-def web_search(query: str, num_results = 3):
-
-    all_dict: dict = {}
-    service = build("customsearch", "v1", developerKey=google_search_key)
-
-    response = service.cse().list(
-        q= query,
-        cx= cx,
-        num= num_results
-    ).execute()
-
-    for i, item in enumerate(response.get("items", []), start = 1):
-        all_dict[f'Page {i}'] = {"Title": item.get("title"),
-        "Snippet": item.get("snippet")}
-        
-    return all_dict
 
 tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "web_search",
-            "description": "Search Google return snippet summaries for the query.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "The search query to run on Google Custom Search."
-                    },
-                    "num_results": {
-                        "type": "integer",
-                        "description": "Number of search results to return.",
-                        "default": 3
-                    }
-                },
-                "required": ["query"]
-            }
+        {
+            "type": "browser_search"
         }
-    }
-]
+    ]
 
 
-your_tools = {"web_search": web_search}
 
 
 def embedder(model:str, content:str|list[str], method:str):
@@ -74,10 +53,13 @@ def embedder(model:str, content:str|list[str], method:str):
         
     
 async def groq_generate(query: str, relevant_passage: str|list[str] = None, max_tokens: int=4096):
+    idx = query.index("Current Query:")
+    logger.info(query[idx + 14: ].strip())
 
     context = ''
     if relevant_passage:
         context = '\n\n'.join(relevant_passage) if not isinstance(relevant_passage, str) else relevant_passage
+
     
     sys_instructions = f"""
             You are a helpful and informative bot assistant that answers questions using
@@ -117,40 +99,15 @@ async def groq_generate(query: str, relevant_passage: str|list[str] = None, max_
     
     try:
         completion = await groq_client.chat.completions.create(
-            model='moonshotai/kimi-k2-instruct',
+            model='openai/gpt-oss-20b',
             messages=messages,
             tools=tools,
             tool_choice='auto',
             temperature=0.5,
-        )
-
-        resp = completion.choices[0].message
-            
-        if resp.tool_calls:
-            # Many open-source or distilled models (like gpt-oss-20b) only reliably emit one call per turn. use kimi
-            for call in resp.tool_calls:
-                messages.append(resp)
-
-                fn_name = call.function.name
-                fn_args = json.loads(call.function.arguments)
-                print("Tool used: ")
-                print(fn_name, fn_args)
-                print
-                try:
-                    result = your_tools[fn_name](**fn_args)
-                    print('\nTool Result', result, sep = '\n')
-                    messages.append({"role": "tool","content": str(result),"tool_call_id": call.id})
-
-                except Exception as e:
-                    messages.append({"role": "tool", "content":  f"ERROR: {str(e)}", "tool_call_id": call.id})    
-               
-        completion = await groq_client.chat.completions.create(
-            model="moonshotai/kimi-k2-instruct",
-            messages= messages,
-            temperature=0.5,
             max_tokens=max_tokens,
             stream = True
         )
+
         async for chunk in completion:
             if data := chunk.choices[0].delta.content:
                 processed_text = re.split(r"</think>\s*", data, maxsplit=1)[-1]
@@ -158,7 +115,7 @@ async def groq_generate(query: str, relevant_passage: str|list[str] = None, max_
 
   
     except Exception as e:
-        print_exc()
+        logger.error(str(e))
         raise RuntimeError(f"Error generating completion: {e}") from e
         
     

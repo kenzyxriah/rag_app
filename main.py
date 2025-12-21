@@ -67,14 +67,7 @@ else:
         
         interactions= '\n\n'.join(previous_interactions)
         
-        augment_prompt = f'''
-        Previous interactions:
-        {interactions}
-        
-        Current Query:
-        {query}
-        
-        '''
+        augment_prompt = f'''\nPrevious interactions: {interactions}\nCurrent Query: {query}'''
         return augment_prompt
 
     # --- FILE UPLOADING AND INDEXING ---
