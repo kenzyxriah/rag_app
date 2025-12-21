@@ -29,15 +29,18 @@ if st.session_state.username is None:
 
     with st.form("username_form"):
         username_input = st.text_input("Your Username", key="username_text_input")
+        password_input = st.text_input("Enter Password Code", type="password")
         submit_button = st.form_submit_button("Enter")
 
         if submit_button:
-            if username_input:
+            if not username_input or not password_input:
+                st.warning("Both fields are required.")
+            elif password_input.strip() != "qDEv" :
+                st.error("Incorrect password. Please try again.")
+            else:
                 st.session_state.username = username_input
                 st.success(f"Welcome, {st.session_state.username}!")
-                st.rerun() # Rerun the app to switch to the main interface
-            else:
-                st.warning("Username cannot be empty. Please enter a username.")
+                st.rerun()
 else:
     # --- Main Application (displayed after username is entered) ---
     st.title(f"Hello, {st.session_state.username}! Let's talk about your documents.")

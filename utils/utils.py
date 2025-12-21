@@ -104,6 +104,7 @@ async def groq_generate(query: str, relevant_passage: str|list[str] = None, max_
             tools=tools,
             tool_choice='auto',
             temperature=0.5,
+            reasoning_effort= "low",
             max_tokens=max_tokens,
             stream = True
         )
