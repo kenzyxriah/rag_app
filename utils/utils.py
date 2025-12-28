@@ -71,8 +71,8 @@ async def groq_generate(query: str, relevant_passage: str|list[str] = None, max_
             Here is your work flow
 
             1. 
-            If the passage is irrelevant or not to helpful to the answer, 
-            you may use ypur internal knowledge to respond, or ask the user to provide more context as what you have is not suitale
+            If there is no passage attached or the passage is irrelevant and not helpful to the query, 
+            you may use ypour internal knowledge to respond, or ask the user to provide more context as what you have is not suitale
             
             2. 
             History tabs are denoted by 

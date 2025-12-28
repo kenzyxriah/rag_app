@@ -12,10 +12,10 @@ class Faiss():
         self.dimension = None # To store the dimension of embeddings
     
     # uses google's embeddings.      
-    async def _get_embed_vals(self, texts:str, username:str,  embed_method : str):
+    async def _get_embed_vals(self, texts:str, username:str,  embed_method : str, metadata: dict):
         
         chunks: list[str] = await langchain_chunk(texts, 300, 20)
-        embedded = await batch_embed_text( chunks, method = embed_method, id = username)
+        embedded = await batch_embed_text( chunks, method = embed_method, id = username, metadata = metadata)
         
         embed_mat = np.zeros((len(chunks), len(embedded[0]['values'])))  # assuming all have same dim
 
@@ -27,10 +27,10 @@ class Faiss():
  
     # Faiss only allows upserting embed values 
     
-    async def upsert_doc(self, texts:str, username:str,embed_method : str = "RETRIEVAL_DOCUMENT") -> faiss.IndexFlatL2:
+    async def upsert_doc(self, texts:str, username:str, metadata: dict, embed_method : str = "RETRIEVAL_DOCUMENT") -> faiss.IndexFlatL2:
         
         matrix_to_add, new_embedded_info = await self._get_embed_vals(texts= texts, username = username,
-                                                                      embed_method = embed_method)
+                                                                      embed_method = embed_method, metadata = metadata)
 
         if self.index is None:
             # First time upserting: initialize the index
@@ -44,13 +44,13 @@ class Faiss():
 
 
         
-    async def query(self, *, texts: str, user_id: str, embed_method: str = 'RETRIEVAL_QUERY', top_k: int = 3) -> list[str] | str:
+    async def query(self, *, texts: str, user_id: str, embed_method: str = 'RETRIEVAL_QUERY', top_k: int = 3) -> list[dict[str, str]] | None:
             """
             Queries the FAISS index with the given text and always filters results by the provided user_id.
 
             """
             if self.index is None or not self.embedded_info:
-                return "No documents indexed yet. Please upload a document first."
+                return None
 
             queried = await batch_embed_text( texts, method=embed_method)
             query_matrix = np.array([queried[0]['values']]).astype('float32') # Ensure float32 for FAISS
@@ -74,9 +74,10 @@ class Faiss():
 
                 item_metadata = self.embedded_info[idx]['metadata']
                 
-                # Filer by id
+                # Filter by id
                 if item_metadata.get('user_id') == user_id:
-                    filtered_results_text.append(item_metadata.get('text', '')) 
+                    filtered_results_text.append({"text" :item_metadata.get('text', ''),
+                                                  "file_name" :item_metadata.get('file_name', '')}) 
                     if len(filtered_results_text) >= top_k: # Stop once we have enough results
                         break
             

@@ -1,11 +1,12 @@
 from classes import Faiss
-from utils import groq_generate
-from utils import Parser
+from utils import groq_generate, parse
 import asyncio
 import streamlit as st
 from google import genai
 from groq import Groq
 import hashlib 
+import tempfile
+from pathlib import Path
 
 
 # --- API Key Setup ---
@@ -46,7 +47,6 @@ else:
     st.title(f"Hello, {st.session_state.username}! Let's talk about your documents.")
 
     # --- Initialize Objects (can be cached if they don't change state much) ---
-    parse_obj = Parser()
 
     @st.cache_resource
     def get_faiss_agent():
@@ -112,18 +112,22 @@ else:
             with st.spinner("Processing new/changed files... This may take a moment."):
                 processed_count = 0
                 for file_name, file_bytes, file_hash in files_to_process:
-                    file_type = file_name.split('.')[-1].lower()
-                    try:
-                        parsed_content = asyncio.run(parse_obj.parse(file_bytes, ext=file_type))
-                        
-                        # your upsert_doc has to be able to extend/add to an index
-                        asyncio.run(faiss_agent.upsert_doc(texts=f'NEW BOOK: {parsed_content}', 
-                                                           username = st.session_state.username)) # Pass doc_id
-                        
-                        st.session_state.processed_file_metadata[file_name] = file_hash # here is where we create a new hash
-                        processed_count += 1
-                    except Exception as e:
-                        st.error(f"Error processing {file_name}: {e}")
+  
+                    with tempfile.TemporaryDirectory() as tmpdir:
+                        tmp_path = Path(tmpdir) / file_name
+                        tmp_path.write_bytes(file_bytes)
+                        try:
+                            parsed_content = asyncio.run(parse(tmp_path))
+                            
+                            # your upsert_doc has to be able to extend/add to an index
+                            asyncio.run(faiss_agent.upsert_doc(texts=f'NEW BOOK: {parsed_content}', 
+                                                            username = st.session_state.username,
+                                                            metadata= {"file_name": file_name})) # Pass doc_id
+                            
+                            st.session_state.processed_file_metadata[file_name] = file_hash # here is where we create a new hash
+                            processed_count += 1
+                        except Exception as e:
+                            st.error(f"Error processing {file_name}: {e}")
 
             if processed_count > 0:
                 st.success(f"✅ {processed_count} files processed!")
@@ -137,9 +141,18 @@ else:
 
 
     # Display all previous messages (including the newly added ones from the last run)
-    for message in st.session_state.messages[2:] : # Start from 2 to skip initial greetings
+    for message in st.session_state.messages[2:] : # Start from 2 to skip initial greetings (3 messages)
         with st.chat_message(message['role']):
             st.markdown(message['content'])
+            if 'sources' in message:
+                with st.expander("📚 View Source Context"):
+                    for item in message['sources']:
+                        st.markdown(f"""
+                        <div style="margin-bottom: 10px; padding: 10px; background-color: #f0f2f6; border-radius: 5px;">
+                            <div style="color: #0f52ba; font-weight: bold;">📄 {item.get('file_name', 'Unknown')}</div>
+                            <div style="font-size: 0.9em;">{item.get('text', '')}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
             
             
     # Get user input
@@ -159,14 +172,51 @@ else:
 
             extracted = asyncio.run(faiss_agent.query(texts=user_input, user_id=st.session_state.username,
                                                       top_k= 5))
-            
+            print(extracted)
+            extracted_text = [i.get('text', '') for i in extracted] if isinstance(extracted, list) else None
 
-            full_response = st.write_stream(groq_generate(query= query, relevant_passage=extracted))
+            full_response = st.write_stream(groq_generate(query= query, relevant_passage=extracted_text))
             
+            st.markdown("""
+                <style>
+                .source-box {
+                    margin-bottom: 10px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 5px;
+                    padding: 10px;
+                    background-color: #f9f9f9;
+                }
+                .source-title {
+                    font-weight: bold;
+                    color: #0f52ba;
+                    margin-bottom: 5px;
+                }
+                .source-text {
+                    font-size: 0.9em;
+                    color: #333;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            if extracted:
+                with st.expander("View Source Context"):
+                    for i, item in enumerate(extracted):
+                        file_name = item.get("file_name", "Unknown File") 
+                        text = item.get("text", "")
+            
+                        st.markdown(f"""
+                        <div class="source-box">
+                            <div class="source-title">📄 {file_name}</div>
+                            <div class="source-text">{text}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
         # append when done
         st.session_state.messages.append({"role": 'user', "content": f'{user_input}'})
-        st.session_state.messages.append({"role": 'AI assistant', "content": f'{full_response}'})
+        if not extracted:
+            st.session_state.messages.append({"role": 'AI assistant', "content": f'{full_response}'})
+        else:
+            st.session_state.messages.append({"role": 'AI assistant', "content": f'{full_response}',
+                "sources": extracted})
                                         
 
 
