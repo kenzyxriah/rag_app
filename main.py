@@ -125,16 +125,16 @@ else:
         elif uploaded_files and not files_to_process:
             st.info("All uploaded files are already processed.")
 
-    for message in st.session_state.messages[2:] : 
+    for message in st.session_state.messages[3:]: 
         with st.chat_message(message['role']):
             st.markdown(message['content'])
             if 'sources' in message:
-                with st.expander("📚 View Source Context"):
+                with st.expander("View Source Context"):
                     for item in message['sources']:
                         st.markdown(f"""
-                        <div style="margin-bottom: 10px; padding: 10px; background-color: #f0f2f6; border-radius: 5px;">
-                            <div style="color: #0f52ba; font-weight: bold;">📄 {item.get('file_name', 'Unknown')}</div>
-                            <div style="font-size: 0.9em;">{item.get('text', '')}</div>
+                        <div class="source-box">
+                            <div class="source-title">📄 {item.get('file_name', 'Unknown')}</div>
+                            <div class="source-text">{item.get('text', '')}</div>
                         </div>
                         """, unsafe_allow_html=True)
             

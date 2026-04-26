@@ -10,7 +10,7 @@ def apply_premium_theme():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
         
-        .stApp {
+        .stApp, [data-testid="stAppViewContainer"] {
             background: radial-gradient(circle at 50% 0%, #3d2b1f 0%, #0d0e15 100%) !important;
             font-family: 'Outfit', sans-serif !important;
             color: #ffffff !important;
@@ -72,28 +72,40 @@ def apply_premium_theme():
         [data-testid="stSidebar"] .stAudioInput,
         [data-testid="stAudioInput"] { 
             position: fixed !important;
-            bottom: -1000px; 
-        }
-        
-        .voice-active {
-            bottom: 55px !important;
+            bottom: 57px !important;
+            right: calc(50% - 340px) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 39px !important;
-            height: 39px !important;
+            width: 41px !important;
+            height: 41px !important;
             overflow: hidden;
-            background-color: transparent;
-            border-radius: 20px;
+            background-color: transparent !important;
+            border-radius: 20px !important;
             z-index: 1000000;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease !important;
         }
         
-        .voice-active:hover, .voice-active:focus-within {
+        @media (max-width: 800px) {
+            [data-testid="stAudioInput"] {
+                right: 20px !important;
+            }
+        }
+
+        [data-testid="stAudioInput"]:hover, [data-testid="stAudioInput"]:focus-within {
             width: 250px !important;
             margin-left: -205px !important;
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(10px) !important;
+        }
+
+        [data-testid="stBottomBlockContainer"] {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        [data-testid="stChatInput"] {
+            background: transparent !important;
         }
 
         [data-testid="stChatInput"] textarea {
@@ -124,31 +136,9 @@ def apply_premium_theme():
     """)
     st.markdown(base_css, unsafe_allow_html=True)
 
-def inject_chat_js():
-    components.html("""
-        <script>
-        function sync() {
-            const audioInput = parent.document.querySelector('[data-testid="stAudioInput"]');
-            const chatInput = parent.document.querySelector('[data-testid="stChatInput"]');
-            
-            if (audioInput && chatInput) {
-                const rect = chatInput.getBoundingClientRect();
-                audioInput.classList.add('voice-active');
-                audioInput.style.left = (rect.right - 50) + 'px';
-                audioInput.style.bottom = (window.innerHeight - rect.bottom + 10) + 'px';
-            }
-            const stray = parent.document.querySelectorAll('[data-testid="stChatInput"] [data-testid="stAudioInput"]');
-            stray.forEach(el => el.remove());
-        }
-        setInterval(sync, 100);
-        </script>
-    """, height=0, width=0)
-
 def render_unified_input():
     if 'audio_key' not in st.session_state:
         st.session_state.audio_key = 0
-    
-    inject_chat_js()
     
     audio_file = st.audio_input("Voice", label_visibility="collapsed", key=f"audio_prompt_{st.session_state.audio_key}")
     chat_input = st.chat_input("Enter your prompt")
