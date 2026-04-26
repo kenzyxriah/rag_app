@@ -1,12 +1,15 @@
-from google import genai
-from google.genai import types
+import hashlib 
+import base64
+import os
 import uuid, asyncio
 import streamlit as st, re, json
+import tempfile
+from google import genai
+from google.genai import types
 from googleapiclient.discovery import build
 from traceback import print_exc
 from groq import AsyncGroq
 from datetime import datetime
-
 import logging
 import warnings
 
@@ -186,3 +189,58 @@ async def langchain_chunk(text: str, size:int, overlap:int) -> list[str]:
 
 
 
+async def save_audio_from_base64(base64_string: str, file_format: str = "wav"):
+    base64_cleaned = base64_string.strip().replace("\n", "").replace("\r", "")
+    try:
+        # We can use a temporary file here
+        with tempfile.NamedTemporaryFile(suffix=f".{file_format}", delete=False) as tmp:
+            output_file_path = tmp.name
+            audio_bytes = base64.b64decode(base64_cleaned)
+            tmp.write(audio_bytes)
+        
+        logger.info(f"Audio decoded and saved successfully to {output_file_path}")
+        return output_file_path
+    except Exception as e:
+        logger.error(f"Failed to decode audio: {e}")
+        return None
+
+stt_prompt = """ 
+You are a highly accurate AI transcription assistant. Your task is to convert spoken language into clean, readable text.
+
+Guidelines:
+- Transcribe the spoken input word-for-word, preserving the speaker’s intent.
+- Correct minor grammatical issues only if necessary for clarity.
+- Do not add or omit any information.
+- Use punctuation to make the transcription easier to read (e.g., commas, periods).
+- If the speaker hesitates or repeats a word, clean it up unless it changes the meaning.
+- Avoid inserting labels like "um", "uh", unless they’re contextually important.
+
+Context:
+The following audio was captured as part of a user request. Your job is to return the most accurate, raw readable transcript possible.
+"""
+
+async def convert_audio_to_text(audio_file_path: str) -> str:
+    "Converts file audio from path to text using Groq Whisper"
+    try:
+        with open(audio_file_path, "rb") as file:
+            transcription = await groq_client.audio.transcriptions.create(
+                file=(os.path.basename(audio_file_path), file.read()),
+                model="whisper-large-v3-turbo",
+                response_format="text",
+                prompt=stt_prompt
+            )
+        return transcription
+    except Exception as e:
+        logger.error(f"Error during Groq transcription: {e}")
+        return ""
+
+async def transcribe(base64_audio: str):
+    audio_path = await save_audio_from_base64(base64_audio)
+    if not audio_path:
+        return None
+    try:
+        transcript = await convert_audio_to_text(audio_path)
+    finally:
+        if os.path.exists(audio_path):
+            os.remove(audio_path)
+    return transcript

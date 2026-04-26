@@ -1,7 +1,8 @@
 from classes import Faiss
-from utils import groq_generate, parse
+from utils import groq_generate, parse, transcribe
 import asyncio
 import streamlit as st
+import base64
 from google import genai
 from groq import Groq
 import hashlib 
@@ -155,8 +156,67 @@ else:
                         """, unsafe_allow_html=True)
             
             
-    # Get user input
-    user_input = st.chat_input("Ask something:")
+    # --- UNIFIED CHAT INPUT (Robust DOM Injection) ---
+    st.markdown("""
+        <style>
+        /* Hide default sidebar voice prompt if any */
+        [data-testid="stSidebar"] .stAudioInput { display: none; }
+        
+        /* Make the audio input look like a button inside the flex container */
+        [data-testid="stChatInput"] [data-testid="stAudioInput"] {
+            width: 45px !important;
+            height: 45px;
+            overflow: hidden;
+            background-color: transparent;
+            border-radius: 50%;
+            margin-left: 10px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        
+        /* Expand on hover/active */
+        [data-testid="stChatInput"] [data-testid="stAudioInput"]:hover,
+        [data-testid="stChatInput"] [data-testid="stAudioInput"]:focus-within {
+            width: 250px !important;
+            background-color: #f0f2f6;
+            border-radius: 20px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Invisible JS component to safely move the DOM elements
+    import streamlit.components.v1 as components
+    components.html("""
+        <script>
+        // Use a small delay to ensure Streamlit has rendered the elements
+        setTimeout(function() {
+            const audioInput = parent.document.querySelector('[data-testid="stAudioInput"]');
+            const chatInput = parent.document.querySelector('[data-testid="stChatInput"]');
+            
+            // If both exist, and audio input is not already inside the chat input
+            if (audioInput && chatInput && !chatInput.contains(audioInput)) {
+                // Find the wrapper inside the chat input (where the textarea and send button live)
+                const chatWrapper = chatInput.querySelector('div');
+                if (chatWrapper) {
+                    chatWrapper.appendChild(audioInput);
+                } else {
+                    chatInput.appendChild(audioInput);
+                }
+            }
+        }, 500);
+        </script>
+    """, height=0, width=0)
+
+    # Render elements normally, JS will move them
+    audio_file = st.audio_input("Voice", label_visibility="collapsed")
+    user_input = st.chat_input("Enter your prompt")
+
+    if audio_file:
+        with st.spinner(""):
+            audio_bytes = audio_file.read()
+            base64_audio = base64.b64encode(audio_bytes).decode()
+            transcribed_text = asyncio.run(transcribe(base64_audio))
+            if transcribed_text:
+                user_input = transcribed_text
 
     if user_input:
         # here i am well not in a graceful way adding past interactions into my query...there was a way to add history to the llm
