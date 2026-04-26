@@ -11,11 +11,30 @@ def apply_premium_theme():
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
         
         .stApp, [data-testid="stAppViewContainer"] {
-            background: radial-gradient(circle at 50% 0%, #3d2b1f 0%, #0d0e15 100%) !important;
+            background: radial-gradient(circle at 50% 0%, #4a2c1a 0%, #0d0000 100%) !important;
             font-family: 'Outfit', sans-serif !important;
             color: #ffffff !important;
         }
         
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+            background: linear-gradient(135deg, #ff9d00 0%, #f9d423 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: #d1d5db;
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+        }
+
         h1, h2, h3, h4, h5, h6, p, label {
             font-family: 'Outfit', sans-serif !important;
         }
@@ -73,7 +92,7 @@ def apply_premium_theme():
         [data-testid="stAudioInput"] { 
             position: fixed !important;
             bottom: 57px !important;
-            right: calc(50% - 340px) !important;
+            right: calc(50% - 338px) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;

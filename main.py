@@ -46,7 +46,8 @@ if st.session_state.username is None:
                 st.success(f"Welcome, {st.session_state.username}!")
                 st.rerun()
 else:
-    st.title(f"Hello, {st.session_state.username}! Let's talk about your documents.")
+    st.markdown(f'<div class="hero-title">Hello, {st.session_state.username}!</div>', unsafe_allow_html=True)
+    st.markdown('<div class="hero-subtitle">Let\'s talk about your documents with Chandra AI.</div>', unsafe_allow_html=True)
 
     @st.cache_resource
     def get_faiss_agent():
