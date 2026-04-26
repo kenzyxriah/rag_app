@@ -1,5 +1,5 @@
 from classes import Faiss
-from utils import groq_generate, parse, transcribe, render_unified_input
+from utils import groq_generate, parse, transcribe, render_unified_input, apply_premium_theme
 import asyncio
 import streamlit as st
 import base64
@@ -9,6 +9,7 @@ import hashlib
 import tempfile
 from pathlib import Path
 
+apply_premium_theme()
 GOOGLE_API_KEY = st.secrets["general"]["GOOGLE_API_KEY"]
 client = genai.Client(api_key=GOOGLE_API_KEY)
 

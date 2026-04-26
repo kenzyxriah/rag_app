@@ -1,12 +1,10 @@
-from docling.document_converter import DocumentConverter # there's a library does this exactly
+from docling.document_converter import DocumentConverter, PdfFormatOption
 import logging
 from pathlib import Path
-from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 
 async def parse(source: Path, use_ocr: bool = False):
-
     if source.name.endswith('.txt'):
         with open(source, 'r', encoding='utf-8') as f:
             return f.read()
