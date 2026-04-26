@@ -1,3 +1,9 @@
+import torch
+try:
+    torch.classes.__path__ = []
+except Exception:
+    pass
+
 from classes import Faiss
 from utils import groq_generate, parse, transcribe, render_unified_input, apply_premium_theme
 import asyncio
