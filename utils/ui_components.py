@@ -14,19 +14,22 @@ def inject_chat_css():
         }
         
         .voice-active {
-            bottom: 38px !important;
-            display: block !important;
-            width: 45px !important;
-            height: 45px;
+            bottom: 55px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 39px !important;
+            height: 39px !important;
             overflow: hidden;
             background-color: transparent;
-            border-radius: 25px;
+            border-radius: 20px;
             z-index: 1000000;
-            transition: width 0.3s ease;
+            transition: all 0.3s ease;
         }
         
         .voice-active:hover, .voice-active:focus-within {
             width: 250px !important;
+            margin-left: -205px !important;
             background-color: #f0f2f6;
         }
 
@@ -63,8 +66,8 @@ def inject_chat_js():
             if (audioInput && chatInput) {
                 const rect = chatInput.getBoundingClientRect();
                 audioInput.classList.add('voice-active');
-                audioInput.style.left = (rect.right - 55) + 'px';
-                audioInput.style.bottom = (window.innerHeight - rect.bottom + 8) + 'px';
+                audioInput.style.left = (rect.right - 50) + 'px';
+                audioInput.style.bottom = (window.innerHeight - rect.bottom + 10) + 'px';
             }
             const stray = parent.document.querySelectorAll('[data-testid="stChatInput"] [data-testid="stAudioInput"]');
             stray.forEach(el => el.remove());
