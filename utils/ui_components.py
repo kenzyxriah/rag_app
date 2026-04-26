@@ -11,52 +11,33 @@ def apply_premium_theme():
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
         
         .stApp, [data-testid="stAppViewContainer"] {
-            background: radial-gradient(circle at 50% 0%, #4a2c1a 0%, #0d0000 100%) !important;
+            background: radial-gradient(circle at 50% 0%, #3d2b1f 0%, #0d0e15 100%) !important;
             font-family: 'Outfit', sans-serif !important;
             color: #ffffff !important;
         }
         
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 0.2rem;
-            background: linear-gradient(135deg, #ff9d00 0%, #f9d423 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            font-weight: 300;
-            color: #d1d5db;
-            margin-bottom: 2rem;
-            letter-spacing: 0.5px;
-        }
-
         h1, h2, h3, h4, h5, h6, p, label {
             font-family: 'Outfit', sans-serif !important;
         }
  
         [data-testid="stVerticalBlockBorderWrapper"] > div {
-            background: rgba(255, 255, 255, 0.02) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            backdrop-filter: blur(15px) !important;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            backdrop-filter: blur(10px) !important;
             border-radius: 20px !important;
             padding: 1.5rem !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
         }
  
         .stTextInput input, .stNumberInput input, .stSelectbox > div[data-baseweb="select"] {
-            background: rgba(0, 0, 0, 0.3) !important;
+            background: rgba(0, 0, 0, 0.2) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: white !important;
             border-radius: 10px !important;
         }
         .stTextInput input:focus, .stSelectbox > div[data-baseweb="select"]:focus-within {
-            border-color: #ff9d00 !important;
-            box-shadow: 0 0 0 1px #ff9d00 !important;
+            border-color: #ff4e50 !important;
+            box-shadow: 0 0 0 1px #ff4e50 !important;
         }
  
         .stButton button {
@@ -68,20 +49,20 @@ def apply_premium_theme():
         }
         .stButton button:hover {
             background: rgba(255, 255, 255, 0.1) !important;
-            border-color: #ff9d00 !important;
+            border-color: #ff4e50 !important;
             transform: translateY(-2px) !important;
-            box-shadow: 0 8px 16px rgba(255, 157, 0, 0.2) !important;
+            box-shadow: 0 8px 16px rgba(255, 78, 80, 0.2) !important;
         }
         
         .stButton button[kind="primary"] {
-            background: linear-gradient(135deg, #ff9d00 0%, #f9d423 100%) !important;
+            background: linear-gradient(135deg, #ff4e50 0%, #f9d423 100%) !important;
             color: white !important;
             font-weight: 600 !important;
             border: none !important;
         }
         .stButton button[kind="primary"]:hover {
             opacity: 0.9 !important;
-            box-shadow: 0 8px 24px rgba(255, 157, 0, 0.4) !important;
+            box-shadow: 0 8px 24px rgba(255, 78, 80, 0.4) !important;
         }
         
         header[data-testid="stHeader"] {
@@ -92,7 +73,7 @@ def apply_premium_theme():
         [data-testid="stAudioInput"] { 
             position: fixed !important;
             bottom: 57px !important;
-            right: calc(50% - 338px) !important;
+            right: calc(50% - 340px) !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -136,7 +117,7 @@ def apply_premium_theme():
 
         .source-box {
             margin-bottom: 10px;
-            border: 1px solid rgba(255, 157, 0, 0.2);
+            border: 1px solid rgba(255, 78, 80, 0.2);
             border-radius: 12px;
             padding: 12px;
             background-color: rgba(255, 255, 255, 0.03);
@@ -144,12 +125,12 @@ def apply_premium_theme():
         }
         .source-title {
             font-weight: bold;
-            color: #ff9d00;
+            color: #ff4e50;
             margin-bottom: 5px;
         }
         .source-text {
             font-size: 0.9em;
-            color: #e5e7eb;
+            color: #d1d5db;
         }
     </style>
     """)
